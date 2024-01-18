@@ -2,8 +2,9 @@
 
 PROJECT CONTENT
 
--- Dataset
 -- Connect to dataset
+
+-- Dataset
   
 -- Exploratory Data Analysis (EDA)
 
@@ -15,7 +16,7 @@ PROJECT CONTENT
 
 
 
------ DATASET 
+----------------------------------------------------------- DATASET 
 
 /*
 Dataset was downloaded from synthea - https://synthea.mitre.org/
