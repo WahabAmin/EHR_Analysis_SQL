@@ -1,16 +1,22 @@
 # EHR_Analysis_SQL
 
-/*
------- PROJECT CONTENT
+PROJECT CONTENT
+
 -- Dataset
 -- Connect to dataset
+  
 -- Exploratory Data Analysis (EDA)
--- Analysis
--- Insight
--- Recommendation
-*/
 
-------------------------------- DATASET -----------------------------------------------
+-- Analysis
+
+-- Insight
+
+-- Recommendation
+
+
+
+----- DATASET 
+
 /*
 Dataset was downloaded from synthea - https://synthea.mitre.org/
 Synthea is an open source program that was developed by the MITRE corporation. It is programmed to randomly generate patient data.
