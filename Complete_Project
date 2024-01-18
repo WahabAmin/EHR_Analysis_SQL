@@ -1,0 +1,523 @@
+# Complete_Project
+
+/*
+------ PROJECT CONTENT
+-- Dataset
+-- Connect to dataset
+-- Exploratory Data Analysis (EDA)
+-- Analysis
+-- Insight
+-- Recommendation
+*/
+
+
+------------------------------- DATASET -----------------------------------------------
+/*
+Dataset was downloaded from synthea - https://synthea.mitre.org/
+Synthea is an open source program that was developed by the MITRE corporation. It is programmed to randomly generate patient data.
+In other words, it is a simulation modeled after the data that a hospital might generate into an electronic medical record system.
+The data that gets generated includes: patient demopgraphics, encounters, drugs administered, lab values, equipment and supplies, providers, claims data, among other things.
+
+What is most impressive about Synthea is the way that the data is simulated. Many aspects of Synthea are modeled after real life epedemiological trends and patterns.
+*/
+
+
+-------------------------------- EXPLORATORY DATA ANALYSIS (EDA) -----------------------
+
+-a------------- What is the average age of patients?
+/*
+- The query calculates the average age of patients in the dataset as 'average_age' from the 'patients' table.
+- The 'EXTRACT(YEAR FROM age(birthdate))' function is employed to extract the age in years for each patient.
+*/
+SELECT AVG(EXTRACT(YEAR FROM age(birthdate))) as average_age
+FROM patients;
+
+
+-b----------Which immunization has the highest frequency in the dataset?
+/*
+-- The result will includes the code, description, and the count (frequency) of occurrences from immunizations table.
+-- The data is grouped by the unique combinations of code and description.
+-- It provides insights into which immunization is most prevalent based on the dataset.
+*/
+SELECT code, description, COUNT(*) as frequency
+FROM immunizations
+GROUP BY code, description
+ORDER BY frequency DESC
+LIMIT 1;
+
+
+-c---------------What is the distribution of different vaccine types?
+/*
+- The code will display 'code', 'description' and 'frequency'(counts of each vaccine types) as columns.
+- It groups records by code and description.
+- Results are sorted in descending order based on the frequency of occurrences.
+*/
+SELECT code, description, COUNT(*) as frequency
+FROM immunizations
+GROUP BY code, description
+ORDER BY frequency DESC;
+
+
+-d------------How many unique patients have received the Herpes Zoster Vaccine (Live)?
+/*
+-- The code selects distinct patients to ensure each is counted only once, even if they received the vaccine multiple times from the 'immunizations' table.
+-- The dataset is filtered to focus on records related to Herpes Zoster Vaccine (Live) immunization.
+*/ 
+SELECT COUNT(DISTINCT patient) as unique_patients
+FROM immunizations
+WHERE code = '5301' AND description = 'Herpes Zoster Vaccine (Live)';
+
+
+
+--------------------------------------- ANALYSIS --------------------------------------------
+
+-a-------- identify how many patients received multiple vaccines in a single encounter?
+/*
+- The query display only patient, encounter, and vaccines_received (ounts the number of vaccines administered during each encounter) 
+from encounters table
+- Data is group based on the patient ID and encounter.
+- The HAVING clause filters the results to include only those instances where multiple vaccines were received during a single encounter.
+*/
+SELECT patient, encounter, COUNT(*) as vaccines_received
+FROM immunizations
+GROUP BY patient, encounter
+HAVING COUNT(*) > 1;
+
+
+
+-b----- What is the average number of days between the first and last immunization?
+/*
+- avg_days_between (Computation of the average days between the first and last immunization dates for each patient)
+- The date_range subquery finds the minimum(first_date) and maximum(last_date) from the immunization table for each patient.
+- The '::DATE' function will convert the result of the MIN(date) and MAX(date) functions from DATETIME type to DATE type.
+- Joins this date range information with the 'immunizations' table (i) using the patient ID.
+
+*/
+
+SELECT ROUND(AVG(last_date - first_date),0) AS avg_days_between
+FROM (
+  SELECT patient,MIN(date)::DATE AS first_date,MAX(date)::DATE AS last_date
+  FROM immunizations
+  GROUP BY patient
+) AS date_range
+JOIN immunizations i ON i.patient = date_range.patient;
+
+
+
+-c-------- How many patients are pregnant?
+/*
+- The query counts the number of distinct patients who have the specified condition related to pregnancy from the 'conditions' 
+table labeled  as 'pregnant_patients'.
+- It focuses on the condition with the code 'V22.2' and the description 'Pregnant state, incidental'.
+*/
+SELECT COUNT(DISTINCT patient) as pregnant_patients
+FROM conditions
+WHERE code = 'V22.2' AND description = 'Pregnant state, incidental';
+
+
+
+-d----------- Most common race and ethnicity among patients?
+/*
+- Query will show only  'race', 'ethnicity' and 'frequency' (Counts the occurrences of each patients race and ethnicity) 
+columns from the patients table
+- Results will be group by race and ethnicity.
+- Results are ordered in descending order based on the frequency of occurrences.
+- The 'LIMIT 1' ensures that only the most frequent combination of race and ethnicity is displayed.
+*/
+SELECT race, ethnicity, COUNT(*) as frequency
+FROM patients
+GROUP BY race, ethnicity
+ORDER BY frequency DESC
+LIMIT 1;
+
+
+
+-e---- List patients who had encounters but no immunizations.
+/*
+- The query identifies distinct patients who have not received any immunizations.
+- Quey will show only 'id', 'firs't, 'last' columns from the patients table
+- Then LEFT JOIN the 'patients' table (p) and the 'immunizations' table (i) based on patient IDs.
+- The condition 'WHERE i.patient IS NULL' filters out records where there is no corresponding immunization data.
+*/
+SELECT DISTINCT p.id, p.first, p.last
+FROM patients p
+LEFT JOIN immunizations i ON p.id = i.patient
+WHERE i.patient IS NULL;
+
+
+
+
+
+-f-------what is the average income and healthcare expenses of patients?
+/*
+- The query will display 'avg_income'(Calculate average income) and avg_healthcare_expenses 
+(calculate average healthcare expenses)
+- Combines data from the 'conditions' table (c) and the 'patients' table (p) using a JOIN operation.
+*/
+SELECT ROUND(AVG(p.income),1) as avg_income, AVG(p.healthcare_expenses) as avg_healthcare_expenses
+FROM conditions c
+JOIN patients p ON c.patient = p.id;
+
+
+
+-g------ How many unique conditions are recorded in the dataset?
+/*
+- The query counts the number of unique medical conditions from the 'conditions' table, labeled as 'conditions_counts'.
+- This query offers a straightforward metric indicating the diversity and variety of medical conditions present in the dataset.
+*/
+SELECT COUNT(DISTINCT code) as conditions_counts
+FROM conditions;
+
+
+
+-h------------- What is the top 5 most common condition among patients?
+/*
+- The query identifies 5 topmost medical condition in the dataset.
+- Query will show only the 'code', 'description' and 'condition_count'(Counts the occurrences of each condition) columns
+- Groups records by condition code and description.
+- Orders the results in descending order based on the condition_count occurrences.
+- The 'LIMIT 5' ensures that only the  5 topmost medical condition is displayed.
+*/
+SELECT code, description, COUNT(*) as frequency
+FROM conditions
+GROUP BY code, description
+ORDER BY frequency DESC
+LIMIT 5;
+
+
+
+
+-i-- What percentage of patients experienced psychological or physical stress more than once?
+/*
+Identification of Stress Patients:
+- 'StressPatients' CTE is created to identify patients who have experienced stress.
+- The CTE filters conditions with descriptions containing the term 'stress.'
+- Patients are grouped, and only those with more than one stress-related condition are retained.
+Counting Patients and Calculating Percentage:
+- The final query counts the total number of distinct patients and the number of patients identified as stress patients.
+- Information from the 'patients' table with that of the 'StressPatients' CTE using LEFT JOIN.
+- Then calculates the percentage of patients who have experienced stress, rounded to one decimal place.
+*/
+
+WITH StressPatients AS (
+  SELECT patient
+  FROM conditions
+  WHERE description ILIKE '%stress%'
+  GROUP BY patient
+  HAVING COUNT(*) > 1)
+
+SELECT 
+  COUNT(DISTINCT p.id) AS total_patients,
+  COUNT(DISTINCT sp.patient) AS stress_patients,
+  ROUND((COUNT(DISTINCT sp.patient) * 100.0 / COUNT(DISTINCT p.id)), 1) AS percentage_stress_patients
+FROM patients p
+LEFT JOIN StressPatients sp ON p.id = sp.patient;
+
+
+-j----------------- Whats the percentage of patients who have conditions related to pregnancy?
+/*
+Identification of Pregnancy Patients:
+- CTE named 'PregnancyPatients' is created to identify patients who have conditions related to pregnancy.
+- The CTE filters conditions with descriptions containing the term 'pregnancy.'
+Counting Patients and Calculating Percentage:
+- The main query counts the total number of distinct patients in the dataset.
+- It then counts the number of patients identified as having conditions related to pregnancy using the 'PregnancyPatients' CTE.
+- Calculates the percentage of patients who have conditions related to pregnancy in the dataset.
+- Use LEFT JOIN to combine information from the 'patients' table with that of the 'PregnancyPatients' CTE.
+*/
+WITH PregnancyPatients AS (
+  SELECT DISTINCT patient
+  FROM conditions
+  WHERE description ILIKE '%pregnancy%'
+)
+
+SELECT 
+  COUNT(DISTINCT p.id) AS total_patients,
+  COUNT(DISTINCT pp.patient) AS pregnancy_patients,
+  (COUNT(DISTINCT pp.patient) * 100.0 / COUNT(DISTINCT p.id)) AS percentage_pregnancy_patients
+FROM patients p
+LEFT JOIN PregnancyPatients pp ON p.id = pp.patient;
+
+
+-k---------------------------- percentage of pregnant patients who received immunization ?
+/*
+Identification of Pregnant Patients:
+- I first  created  CTE to identify patients with conditions related to pregnancy 'PregnantPatients'.
+- The CTE focus on conditions with descriptions containing the term 'pregnancy' and retains distinct patient IDs.
+Identification of Immunized Pregnant Patients:
+- Another CTE named 'ImmunizedPregnantPatients' is created to identify patients from the 'PregnantPatients' group who have received immunizations.
+- Utilizes a JOIN operation with the 'immunizations' table based on patient ID.
+Counting and Percentage Calculation:
+- The last query counts the total number of distinct pregnant patients and the number of those who have received immunizations.
+- Join information from the 'PregnantPatients' and 'ImmunizedPregnantPatients' CTEs.
+- Calculates the percentage of pregnant patients who have received immunizations 
+*/
+
+WITH PregnantPatients AS (
+  SELECT DISTINCT c.patient
+  FROM conditions c
+  WHERE c.description ILIKE '%pregnancy%'),
+  
+ImmunizedPregnantPatients AS (
+  SELECT DISTINCT p.patient as patient
+  FROM PregnantPatients p
+  JOIN immunizations i ON p.patient = i.patient)
+
+SELECT 
+  COUNT(DISTINCT pp.patient) AS total_pregnant_patients,
+  COUNT(DISTINCT ipp.patient) AS immunized_pregnant_patients,
+  (COUNT(DISTINCT ipp.patient) * 100.0 / COUNT(DISTINCT pp.patient)) AS percentage_immunized_pregnant_patients
+FROM PregnantPatients pp
+LEFT JOIN ImmunizedPregnantPatients ipp ON pp.patient = ipp.patient;
+
+
+
+-l---- Which city recorded the highest number of cases?
+/*
+- The code will show the City from patients table and condition_count (Calculate the number of conditions for each state) 
+from the conditions table.
+- Combine the data using ON patients ID using JOIN
+- Group the records by city
+- Order the results by condition_count in descending order 
+- 'LIMIT 1' will show only the top row.
+*/
+SELECT p.city, COUNT(*) AS condition_count
+FROM conditions c
+JOIN patients p ON c.patient = p.id
+GROUP BY p.city
+ORDER BY condition_count DESC
+LIMIT 1;
+
+
+-m-------How many patients have conditions related to pregnancy, and what is their location?
+/*
+- The query identifies patients with conditions related to pregnancy.
+- The result includes the first name, last name, condition description, city, and address of patients with pregnancy-related conditions.
+- Combines data from the 'patients' table (p) and the 'conditions' table (c) using a JOIN operation.
+- Filters the data to include only records where the condition description contains the term 'pregnancy'.
+*/
+SELECT p.first, p.last, c.description, p.city, p.address
+FROM patients p
+JOIN conditions c ON p.id = c.patient
+WHERE c.description ILIKE '%pregnancy%';
+
+
+
+-n-------- What are the most common conditions for patients in different income brackets?
+/*
+- The query categorizes patients into income brackets: 'Low Income,' 'Medium Income,' and 'High Income.'
+- The CommonConditions CTE (Common Table Expression) represents the grouped data.
+- The data from the 'patients' table (p) and the 'conditions' table (c) are combine using a JOIN operation.
+- Groups the data by income category and condition description, counting the occurrences of each combination.
+- Within each income category, conditions are ranked in descending order based on their count.
+- The final result selects the top condition for each income category based on the ranking.
+*/
+WITH CommonConditions AS (
+  SELECT CASE
+           WHEN p.income < 300000 THEN 'Low Income'
+           WHEN p.income >= 300000 AND p.income < 500000 THEN 'Medium Income'
+           ELSE 'High Income'
+         END AS income_category,
+         c.description, COUNT(*) AS condition_count
+  FROM patients p
+  JOIN conditions c ON p.id = c.patient
+  GROUP BY income_category, c.description
+  ORDER BY income_category, condition_count DESC)
+  
+SELECT income_category, description, condition_count
+FROM (SELECT income_category, description, condition_count,
+         ROW_NUMBER() OVER (PARTITION BY income_category ORDER BY condition_count DESC) AS rnk
+  FROM CommonConditions
+) ranked
+WHERE rnk = 1;
+
+select MIN(income), MAX(income)
+from patients;
+
+-o-------- How many patients have conditions related to stress, categorized by income level?
+/*
+- The query categorizes patients into income brackets: 'Low Income,' 'Medium Income,' and 'High Income.'
+- Combines data from the 'patients' table (p) and the 'conditions' table (c) using a JOIN operation.
+- Filters the data to include only records where the condition description contains the term 'stress.'
+- Groups the data by income category, counting the number of patients in each category who have conditions related to stress.
+*/
+SELECT CASE
+         WHEN p.income < 50000 THEN 'Low Income'
+         WHEN p.income >= 50000 AND p.income < 100000 THEN 'Medium Income'
+         ELSE 'High Income'
+       END AS income_category,
+       COUNT(*) AS patient_count
+FROM patients p
+JOIN conditions c ON p.id = c.patient
+WHERE c.description ILIKE '%stress%'
+GROUP BY income_category;
+
+
+
+-p----------- What are the top 5 encounter reason?
+/*
+- The query will display 'code', 'description', and 'encounters_count' (Counts the occurrences of each encounter) columns 
+from encounters table
+- Results will then be group by 'code' and 'description'.
+- Results are ordered in descending order based on the encounters_cou.
+*/
+SELECT code, description, COUNT(*) as encounters_count
+FROM encounters
+GROUP BY code, description
+ORDER BY encounters_count DESC
+Limit 5;
+
+
+
+-q-- How many distinct encounters involve the administration of Seasonal Flu Vaccine?
+/*
+- The query counts the distinct encounters, ensuring each encounter is only counted once, even if the vaccine was administered multiple 
+times during that encounter.The result, labeled as 'distinct_flu_encounters,'
+- Filter the records based on the Seasonal Flu vaccine code and description.
+*/
+SELECT COUNT(DISTINCT encounter) as distinct_flu_encounters
+FROM immunizations
+WHERE code = '5302' AND description = 'Seasonal Flu Vaccine';
+
+
+
+-r-- How many patients received Seasonal Flu Vaccine 30 days after encounter?
+/*
+- The query identifies patients who received the Seasonal Flu Vaccine within 30 days after an encounter.
+- The query counts the distinct patients, labeled as 'patients_count'.
+- Then use JOIN operation to combine 'immunizations' table (i) and the 'encounters' table (e) based on patient ID.
+- Filters the data to include only records where the vaccine 'code' and 'description' match that of Seasonal Flu Vaccine.
+- Further restricts the results to cases where the vaccine date is within 30 days after the start of the encounter.
+*/
+SELECT COUNT(DISTINCT i.patient) as patients_count
+FROM immunizations i
+JOIN encounters e 
+ON i.patient = e.patient
+WHERE i.code = '5302' AND i.description = 'Seasonal Flu Vaccine'
+ AND i.date <= e.start + INTERVAL '30 days';
+ 
+ 
+-s-- Whats number of days between first encounter and immunization for each patient?
+/*
+-- This code uses a Common Table Expression (CTE) named 'FirstEncounter' to find the date of the first encounter for each patient.
+-- Then, it calculates the average number of days between the immunization date and the date of the first encounter for all patients in the dataset.
+- Combines data from the 'encounters' table (e) and the immunization (i) using a LEFT JOIN operation.
+- The main query calculates the average number of days between the immunization date and the date of the first encounter.
+-- It joins the 'immunizations' table (i) with the 'FirstEncounter' CTE using the patient ID.
+-- The "EXTRACT(EPOCH FROM (i.date - fe.first_encounter_date))/86400.0" expression calculate the difference in seconds between the immunization date and
+the first encounter date, which then convert this difference to days.
+*/
+WITH FirstEncounter AS (
+  SELECT i.patient, MIN(e.start) AS first_encounter_date
+  FROM immunizations i
+  JOIN encounters e ON i.patient = e.patient
+  GROUP BY i.patient
+)
+
+SELECT ROUND(AVG(EXTRACT(EPOCH FROM (i.date - fe.first_encounter_date))/86400.0),0) AS avg_days_between
+FROM immunizations i
+JOIN FirstEncounter fe ON i.patient = fe.patient;
+
+
+-t-----Waht is the most common condition among races? 
+ /*
+- Creates a Common Table Expression named `RankedConditions`.
+- Joins the `patients` and `conditions` tables on the patient ID.
+- Groups the data by patient race and condition description.
+- Calculates the count of each condition for each race.
+- The `RANK()` window function to assign a rank to each condition within its race partition.
+- Final main Statement retrieves the race and common condition from the `RankedConditions` CTE.
+- Filters the results to include only the rows where the condition has a rank of 1 within its race.
+ */
+WITH RankedConditions AS (
+  SELECT p.race, c.description AS common_condition, RANK() OVER (PARTITION BY p.race ORDER BY COUNT(*) DESC) AS condition_rank
+  FROM patients p
+  JOIN conditions c ON p.id = c.patient
+  GROUP BY p.race, c.description)
+  
+SELECT race, common_condition
+FROM RankedConditions
+WHERE condition_rank = 1;
+
+-u----- What is the distribution of different vaccines among male and female patients?
+/*
+- The code will display 'code' and 'description' from immunization table, 'gender' from patients table and 'frequency' (the occurrences of each vaccine type)
+- It  will combine data from the 'immunizations' table (i) and the 'patients' table (p) using a JOIN operation.
+- Records are grouped based on unique combinations of immunization code, description, and patient gender.
+- Results are ordered in descending order based on the frequency of occurrences.
+*/
+SELECT i.code, i.description, p.gender, COUNT(*) as frequency
+FROM immunizations i
+JOIN patients p ON i.patient = p.id
+GROUP BY i.code, i.description, p.gender
+ORDER BY frequency DESC;
+
+-v------------------------
+SELECT EXTRACT(MONTH FROM start) AS month,COUNT(*) AS encounter_count
+FROM encounters
+GROUP BY month
+ORDER BY encounter_count DESC;
+
+
+---------------------------------------------- INSIGHTS -----------------------------------
+
+1-- 24,534 patients received multiple vaccines in a single encounter
+
+2-- The average days between first and last immunization is 2,964 days
+
+3-- 4,031 of patients are pregnant women
+
+4-- White and Nonhispanic are the most commom race and ethnicity respectively
+
+5-- 8 patients had encountert but did'nt immunized
+
+6-- Average income is $116717.4
+
+7-- Average healthcre expenses $386439.7
+
+8-- There is 174 unique condition
+
+9-- Most common condition is "Other psychological or physical stress, not elsewhere classified
+
+10-- 66.1% of patients were diagnosed of condition related to stress more than once
+
+11-- 1.5% of patients have pregnanacy related conditions.
+
+12-- 99.4% of pregnant patients women were immunized
+
+13-- City of Boston recorded the highest diagnoses of all cases.
+
+14-- Top most reason for encounter  is Hospital Encounter with Problem
+
+15-- 10,385 patients received easonal Flu Vaccine one month post encounter
+
+16-- The average number of days between initial encounter and first imminization is 1,021 days
+
+17-- The most common condition among patients is "Other psychological or physical stress, not elsewhere classified"
+
+18-- Seasonal Flu Vaccine is the most used vaccine in the facility
+
+19-- The month of March recorded the highest encounter, whiles the octoberf recorded the least.
+
+
+
+----------------------------------------- RECOMMENDATION ----------------------------------
+/*
+
+1.  - Given the high number of patients that received multiple vaccines in a single encounter, it's important to ensure that vaccine administration processes are streamlined and efficient.
+
+2. - Encourage healthcare providers to educate patients on the importance of timely vaccinations and work towards reducing the gap between first and last immunization.
+
+3. - Given that 4,031 patients are pregnant women, there should be a focus on maternal health programs.
+
+4. - Identify and address the reasons why 8 patients had encounters but did not receive immunizations. 
+
+5. - Consider implementing programs to address stress management, mental health, and wellness. 
+
+6. - Collaborate with local health agencies and healthcare providers in Boston to understand the specific health challenges and implement targeted interventions to address them.
+
+7. - Continue to promote flu vaccination campaigns, especially during the month of October when the encounter rate is lowest.
+
+8. - Ensure accurate and comprehensive record-keeping for patient encounters, immunizations, and diagnoses. This will aid in better analysis and decision-making for future healthcare initiatives.
+
+*/
