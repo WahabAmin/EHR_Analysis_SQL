@@ -89,6 +89,9 @@ What is most impressive about Synthea is the way that the data is simulated. Man
 
 
 
+
+
+
 ----------------------------------------- RECOMMENDATIONS
 
 
