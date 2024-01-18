@@ -13,6 +13,8 @@ Statistical Insights: Provides statistical insights such as the most common medi
 Complex Queries: Includes complex queries to identify patterns, calculate averages, and determine the timing of critical healthcare events, contributing to a comprehensive understanding of the dataset.
 
 
+
+
 PROJECT CONTENT
 
 -- Connect to dataset
