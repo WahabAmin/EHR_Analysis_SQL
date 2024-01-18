@@ -42,7 +42,7 @@ What is most impressive about Synthea is the way that the data is simulated. Man
 
 
 
----------------------------------------------- INSIGHTS 
+---------------------------------------------- KEY INSIGHTS 
 
 1-- 24,534 patients received multiple vaccines in a single encounter
 
