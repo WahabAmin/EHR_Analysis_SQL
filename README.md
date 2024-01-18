@@ -1,5 +1,18 @@
 # EHR_Analysis_SQL
 
+Dear GitHub Community,
+
+I am excited to share my latest project, a comprehensive healthcare data analysis project, which I have developed to explore and analyze diverse healthcare datasets. This project encompasses a range of SQL queries that delve into patient information, conditions, immunizations, and encounters, offering valuable insights for data-driven decision-making in the healthcare domain.
+
+Key Features:
+
+Data Exploration: Utilizes SQL queries to explore and analyze various aspects of healthcare data, including patient demographics, medical conditions, immunization records, and encounter details.
+
+Statistical Insights: Provides statistical insights such as the most common medical conditions, distribution of encounters, and analysis of patient demographics.
+
+Complex Queries: Includes complex queries to identify patterns, calculate averages, and determine the timing of critical healthcare events, contributing to a comprehensive understanding of the dataset.
+
+
 PROJECT CONTENT
 
 -- Connect to dataset
