@@ -18,7 +18,7 @@ PROJECT CONTENT
 
 ----------------------------------------------------------- DATASET 
 
-/*
+
 Dataset was downloaded from synthea - https://synthea.mitre.org/
 
 Synthea is an open source program that was developed by the MITRE corporation. It is programmed to randomly generate patient data.
